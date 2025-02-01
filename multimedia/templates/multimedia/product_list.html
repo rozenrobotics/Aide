@@ -12,7 +12,9 @@
                             <p class="card-text">{{ product.description }}</p>
                             <p class="card-text"><strong>{{ product.price }} руб</strong></p>
                             <a href="{% url 'create_payment' product.id %}"
-                               class="btn btn-outline-primary waves-effect">Заказать</a>
+                               class="btn btn-outline-primary waves-effect">Оплатить (ЮМани)</a>
+                            <a href="{% url 'test_payment' product.id %}"
+                               class="btn btn-outline-secondary waves-effect mt-2">ТЕСТ (бесплатно)</a>
                         </div>
                     </div>
                 </div>

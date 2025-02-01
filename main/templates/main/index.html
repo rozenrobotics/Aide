@@ -21,6 +21,20 @@
 
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card">
+                    <img class="card-img-top" src="{% static 'assets/img/main/ticket.jpg' %}"
+                         alt="Билет">
+                    <div class="card-body">
+                        <h5 class="card-title">Покупка билета</h5>
+                        <p class="card-text">
+                            Зарегистрируйтесь на рейс, выберите поезд и место, затем оплатите билет.
+                        </p>
+                        <a href="{% url 'purchase_ticket' %}" class="btn btn-outline-primary waves-effect">Купить билет</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card">
                     <img class="card-img-top" src="{% static 'assets/img/main/multimedia.jpg' %}"
                          alt="Card image cap">
                     <div class="card-body">

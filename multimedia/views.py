@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from yoomoney import Quickpay, Client
 from django.conf import settings
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from multimedia.models import UserOrder, Product
 from django.contrib.auth.decorators import login_required
 import uuid
@@ -117,4 +117,27 @@ def process_question_ajax(request):
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-procces_order(UserOrder.objects.all().last(),1)
+
+@login_required(login_url='login')
+def test_payment(request, product):
+    user = request.user
+    # Генерируем уникальную метку для заказа
+    label = str(uuid.uuid4())
+
+    product_obj = get_object_or_404(Product, id=product)
+    order = UserOrder.objects.create(
+        user=user,
+        yoomoney_label=label,
+        product=product_obj
+    )
+    # Симулируем мгновенную оплату: помечаем заказ как активный
+    order.is_active = True
+    order.save()
+
+    # Если у пользователя уже есть билет, передаём номер места в робота
+    train_ticket = TrainTicket.objects.filter(user=user).last()
+    if train_ticket:
+        procces_order(order, train_ticket.seat_number)
+    # Отображаем страницу успешной оплаты
+    return render(request, 'multimedia/success.html')
+

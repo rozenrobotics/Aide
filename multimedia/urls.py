@@ -8,6 +8,7 @@ urlpatterns = [
     path('music', views.music, name='music'),
 
     path('create-payment/<int:product>', views.create_payment, name='create_payment'),
+    path('test-payment/<int:product>', views.test_payment, name='test_payment'),
     path('check-payment-status/', views.check_payment_status, name='check_payment_status'),
 
     path('gpt', views.gpt, name='gpt'),

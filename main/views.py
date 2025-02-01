@@ -1,4 +1,6 @@
-
+import uuid
+import json
+import urllib.request
 from django.shortcuts import render, redirect, get_object_or_404
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -6,12 +8,18 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from users.models import TrainTicket, BiometricProfile
 from services.biometrics import register_face, recognize_face
+from django.urls import reverse
+from yoomoney import Quickpay, Client
+from django.conf import settings
+from users.models import TrainCruise
+from robot.send_to_robot import procces_order
+from users.models import TicketOrder
+from RobotStuartRzd.keys import youmoney_token
+
 
 @login_required(login_url='login')
 def index(request):
-    return (render(request, 'main/index.html'))
-
-
+    return render(request, 'main/index.html')
 
 @login_required(login_url='login')
 def check_in(request):
@@ -38,3 +46,95 @@ def check_in(request):
 
     return render(request, 'main/check_in.html',
                   context={'is_bio': BiometricProfile.objects.filter(user=request.user).exists()})
+
+@login_required(login_url='login')
+def purchase_ticket(request):
+    """
+    Форма для выбора рейса и указания места.
+    """
+    if request.method == 'POST':
+        train_id = request.POST.get('train_id')
+        seat_number = request.POST.get('seat_number')
+        train = get_object_or_404(TrainCruise, id=train_id)
+
+        # Создаём заказ билета с фиксированной стоимостью и уникальной меткой
+        label = str(uuid.uuid4())
+        ticket_order = TicketOrder.objects.create(
+            user=request.user,
+            train_cruise=train,
+            seat_number=seat_number,
+            yoomoney_label=label
+        )
+        # Перенаправляем на страницу выбора способа оплаты
+        return redirect('payment_options', order_id=ticket_order.id)
+    else:
+        trains = TrainCruise.objects.all()
+        return render(request, 'main/purchase_ticket.html', {'trains': trains})
+
+@login_required(login_url='login')
+def payment_options(request, order_id):
+    """
+    Страница, где пользователь выбирает способ оплаты.
+    """
+    ticket_order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
+    return render(request, 'main/payment_options.html', {'order': ticket_order})
+
+@login_required(login_url='login')
+def pay_ticket_yoomoney(request, order_id):
+    """
+    Инициализация оплаты через ЮМани.
+    """
+    ticket_order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
+    quickpay = Quickpay(
+        receiver="4100118786548312",
+        quickpay_form="shop",
+        targets="Покупка билета на Портале ВСМ",
+        paymentType="AC",
+        sum=ticket_order.train_cruise.price,
+        label=ticket_order.yoomoney_label,
+        successURL=request.build_absolute_uri(reverse('pay_ticket_status', args=[ticket_order.id]))
+    )
+    return redirect(quickpay.redirected_url)
+
+@login_required(login_url='login')
+def pay_ticket_status(request, order_id):
+    """
+    Проверка статуса оплаты для заказа билета через ЮМани.
+    После подтверждения оплаты билет отмечается как приобретённый.
+    """
+    ticket_order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
+    token = youmoney_token 
+    client = Client(token)
+    try:
+        history = client.operation_history(label=ticket_order.yoomoney_label)
+        if history.operations:
+            operation = history.operations[0]
+            if operation.status == 'success':
+                # Если оплата успешна, активируем заказ и отмечаем билет как приобретённый
+                ticket_order.is_active = True
+                ticket_order.save()
+                train_ticket = TrainTicket.objects.create(
+                    user=request.user,
+                    train=ticket_order.train_cruise,
+                    seat_number=ticket_order.seat_number
+                )
+                return render(request, 'main/success_ticket.html', {'ticket_order': ticket_order})
+    except Exception as e:
+        print(e)
+    return render(request, 'main/failure_ticket.html')
+
+@login_required(login_url='login')
+def pay_ticket_test(request, order_id):
+    """
+    Тестовая оплата – отмечает заказ как оплачен без реального платежа.
+    Билет сразу считается приобретённым.
+    """
+    ticket_order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
+    ticket_order.is_active = True
+    ticket_order.save()
+    train_ticket = TrainTicket.objects.create(
+        user=request.user,
+        train=ticket_order.train_cruise,
+        seat_number=ticket_order.seat_number
+    )
+    return render(request, 'main/success_ticket.html', {'ticket_order': ticket_order})

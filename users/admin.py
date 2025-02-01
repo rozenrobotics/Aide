@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-from users.models import TrainTicket, BiometricProfile, TrainCruise, RobotProfile
+from users.models import TrainTicket, BiometricProfile, TrainCruise, RobotProfile, TicketOrder
 
 
 @admin.register(TrainCruise)
@@ -76,6 +76,7 @@ class UserAdmin(UserAdmin):
 
 
 admin.site.register(RobotProfile)
+admin.site.register(TicketOrder)
 
 
 @admin.register(BiometricProfile)

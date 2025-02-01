@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
+
 
 
 class User(AbstractUser):
@@ -13,6 +15,7 @@ class TrainCruise(models.Model):
     departure_time = models.DateTimeField(null=True, blank=True)
     arrival_time = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    price = models.IntegerField(default=2)
 
     def __str__(self):
         return f"{self.train_number} - {self.departure_station} to {self.arrival_station}"
@@ -44,3 +47,14 @@ class RobotProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.now_cruise.train_number}"
 
+
+class TicketOrder(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    train_cruise = models.OneToOneField(TrainCruise, on_delete=models.CASCADE)
+    seat_number = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    yoomoney_label = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return f"Заказ билета для {self.user.username} на рейс {self.train_cruise.train_number}"

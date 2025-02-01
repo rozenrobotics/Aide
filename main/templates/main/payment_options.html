@@ -1,0 +1,16 @@
+{% extends 'portal_base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5">
+  <h3>Выберите способ оплаты</h3>
+  <p>Стоимость билета: {{ order.price }} руб.</p>
+  <div class="d-flex flex-column">
+    <a href="{% url 'pay_ticket_yoomoney' order.id %}" class="btn btn-success mb-3">
+      Оплатить через ЮМани
+    </a>
+    <a href="{% url 'pay_ticket_test' order.id %}" class="btn btn-secondary">
+      ТЕСТ (оплата бесплатно)
+    </a>
+  </div>
+</div>
+{% endblock %} 

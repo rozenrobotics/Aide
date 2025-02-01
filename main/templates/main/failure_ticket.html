@@ -1,0 +1,9 @@
+{% extends 'portal_base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5 text-center">
+  <h3>Оплата не прошла!</h3>
+  <p>Попробуйте повторить попытку или обратитесь в поддержку.</p>
+  <a href="{% url 'index' %}" class="btn btn-primary">На главную</a>
+</div>
+{% endblock %} 

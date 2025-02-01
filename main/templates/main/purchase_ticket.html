@@ -1,0 +1,26 @@
+{% extends 'portal_base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5">
+  <h3>Зарегистрироваться на рейс</h3>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="train_id" class="form-label">Выберите поезд:</label>
+      <select class="form-select" name="train_id" id="train_id" required>
+        {% for train in trains %}
+          <option value="{{ train.id }}">
+            {{ train.train_number }}: {{ train.departure_station }} – {{ train.arrival_station }}
+            ({{ train.departure_time|date:"d.m.Y H:i" }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="seat_number" class="form-label">Номер места:</label>
+      <input type="number" class="form-control" name="seat_number" id="seat_number" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Продолжить</button>
+  </form>
+</div>
+{% endblock %} 
