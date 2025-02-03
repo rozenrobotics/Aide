@@ -3,24 +3,39 @@
 {% block content %}
 <div class="container mt-5">
   <h3>Зарегистрироваться на рейс</h3>
-  <form method="post">
-    {% csrf_token %}
-    <div class="mb-3">
-      <label for="train_id" class="form-label">Выберите поезд:</label>
-      <select class="form-select" name="train_id" id="train_id" required>
-        {% for train in trains %}
-          <option value="{{ train.id }}">
-            {{ train.train_number }}: {{ train.departure_station }} – {{ train.arrival_station }}
-            ({{ train.departure_time|date:"d.m.Y H:i" }})
-          </option>
-        {% endfor %}
-      </select>
+  {% if trains %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="train_id" class="form-label">Выберите поезд:</label>
+        <select class="form-select" name="train_id" id="train_id" required>
+          {% for train in trains %}
+            <option value="{{ train.id }}">
+              {{ train.train_number }}: {{ train.departure_station }} – {{ train.arrival_station }}
+              ({{ train.departure_time|date:"d.m.Y H:i" }})
+              - Свободных мест: {{ train.available_seats.count }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="seat_number" class="form-label">Номер места:</label>
+        <select class="form-select" name="seat_number" id="seat_number" required>
+          {% for train in trains %}
+            <optgroup label="{{ train.train_number }}">
+              {% for seat in train.available_seats %}
+                <option value="{{ seat }}" data-train="{{ train.id }}">Место {{ seat }}</option>
+              {% endfor %}
+            </optgroup>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Продолжить</button>
+    </form>
+  {% else %}
+    <div class="alert alert-info">
+      В данный момент нет доступных поездов. Пожалуйста, попробуйте позже.
     </div>
-    <div class="mb-3">
-      <label for="seat_number" class="form-label">Номер места:</label>
-      <input type="number" class="form-control" name="seat_number" id="seat_number" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Продолжить</button>
-  </form>
+  {% endif %}
 </div>
-{% endblock %} 
+{% endblock %}

@@ -16,7 +16,7 @@ class TrainCruise(models.Model):
     arrival_time = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     price = models.IntegerField(default=2)
-
+    seat_count = models.IntegerField(default=50)
     def __str__(self):
         return f"{self.train_number} - {self.departure_station} to {self.arrival_station}"
 
@@ -50,7 +50,7 @@ class RobotProfile(models.Model):
 
 class TicketOrder(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    train_cruise = models.OneToOneField(TrainCruise, on_delete=models.CASCADE)
+    train_cruise = models.OneToOneField(TrainCruise, on_delete=models.CASCADE, null=True, blank=True)
     seat_number = models.IntegerField(default=0)
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

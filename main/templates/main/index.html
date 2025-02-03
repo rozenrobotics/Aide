@@ -5,33 +5,35 @@
         <div class="row">
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card">
-                    <img class="card-img-top" src="{% static 'assets/img/main/faceid.jpg' %}"
-                         alt="Card image cap">
-                    <div class="card-body">
-                        <h5 class="card-title">Добро пожаловать в портал ВСМ!</h5>
-                        <p class="card-text">
-                            Вы можете зарегистрироваться на рейс заранее, чтобы сэкономить время на
-                            вокзале. Вам будет предложен ускоренный досмотр, а также доступ к поезду по биометрии всего
-                            за несколько секунд.
-                        </p>
-                        <a href="{% url 'check_in' %}" class="btn btn-primary waves-effect">Быстрая регистрация</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card">
-                    <img class="card-img-top" src="{% static 'assets/img/main/ticket.jpg' %}"
+                    <img class="card-img-top" src="{% static 'assets/img/main/ticket.jpeg' %}"
                          alt="Билет">
                     <div class="card-body">
                         <h5 class="card-title">Покупка билета</h5>
                         <p class="card-text">
                             Зарегистрируйтесь на рейс, выберите поезд и место, затем оплатите билет.
                         </p>
-                        <a href="{% url 'purchase_ticket' %}" class="btn btn-outline-primary waves-effect">Купить билет</a>
+                        <a href="{% url 'purchase_ticket' %}" class="btn btn-primary waves-effect">Купить билет</a>
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card">
+                    <img class="card-img-top" src="{% static 'assets/img/main/faceid.jpg' %}"
+                         alt="Card image cap">
+                    <div class="card-body">
+                        <h5 class="card-title">Быстрый проход</h5>
+                        <p class="card-text">
+                            Вы можете зарегистрироваться на рейс заранее, чтобы сэкономить время на
+                            вокзале. Вам будет предложен ускоренный досмотр, а также доступ к поезду по биометрии всего
+                            за несколько секунд.
+                        </p>
+                        <a href="{% url 'check_in' %}" class="btn btn-outline-primary waves-effect">Быстрая регистрация</a>
+                    </div>
+                </div>
+            </div>
+
+
 
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card">

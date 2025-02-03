@@ -1,0 +1,20 @@
+{% extends 'portal_base.html' %}
+{% load static %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <div class="error-content">
+                    <h1 class="display-1">Ошибка</h1>
+                    <h2>Упс! На сервере произошла ошибка</h2>
+                    <a href="{% url 'index' %}" class="btn btn-primary btn-lg waves-effect">
+                        Вернуться на главную
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
