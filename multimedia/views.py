@@ -101,16 +101,42 @@ def process_question_ajax(request):
             data = json.loads(request.body)
             question = data.get('text', '')
 
-            # Отправка запроса на AI-сервис с использованием urllib
-            ai_url = 'https://foteapi2.pythonanywhere.com/process'
-            headers = {'Content-Type': 'application/json'}
-            payload = json.dumps({'request_type': 'rzd_question_answering', 'text': question}).encode('utf-8')
+            # Отправка запроса на AI-сервис
+            ai_url = ' http://api.freil.ru/generate'
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': '4Ikp8h-YohTlxJtAhquvveS0LjfTnh0fVK4R0S-YZek'
+            }
+            payload = {
+                "api_key": "RiV544NRwNLTcH8rLIAefu2_ffCHAVRfFwtgnmikwkY",
+                "model": "llama-3.3-70b-versatile", 
+                "model_key": "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",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Ты - виртуальный проводник РЖД. Ты помогаешь пассажирам с вопросами о поездах, билетах и сервисах РЖД. Ты знаешь все правила проезда в поездах, можешь подсказать, как купить билет, рассказать о услугах в поезде и на вокзале. Ты всегда вежлив и готов помочь пассажирам с любыми вопросами, связанными с поездками по железной дороге."
+                    },
+                    {
+                        "role": "user", 
+                        "content": question
+                    }
+                ],
+                "temperature": 1,
+                "max_tokens": 1024,
+                "top_p": 1,
+                "stream": False,
+                "stop": None
+            }
 
-            req = urllib.request.Request(ai_url, data=payload, headers=headers)
+            req = urllib.request.Request(
+                ai_url,
+                data=json.dumps(payload).encode('utf-8'),
+                headers=headers
+            )
             with urllib.request.urlopen(req) as response:
                 response_data = json.loads(response.read().decode('utf-8'))
 
-            return JsonResponse({'response': response_data})
+            return JsonResponse({'response': response_data['answer']})
 
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Произошла ошибка при генерации ответа'}, status=400)
