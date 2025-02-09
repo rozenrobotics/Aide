@@ -18,12 +18,13 @@ from robot.functions.cv import recognize_face_cords
 import json
 import urllib.request
 import urllib.parse
-
+from services.deviant import recognize_action
 
 
 def departure_index(request):
     sync_train_data()
-    return (render(request, 'robot/departure.html'))
+    cruise = TrainInfo.objects.first()
+    return (render(request, 'robot/departure.html', context={'cruise': cruise}))
 
 
 def recognize_face_ajax(request):
@@ -33,6 +34,7 @@ def recognize_face_ajax(request):
 
         if photo_data:
             recognize_result = recognize_face(photo_data, cruise_id)
+            print(recognize_result)
             if recognize_result == 0:
                 return JsonResponse({'status': 'no_face'})
             elif recognize_result == 1:
@@ -62,7 +64,9 @@ def recognize_face_cords_ajax(request):
         # Декодирование Base64 строки
         image_data = base64.b64decode(photo_data)
         coordinates = recognize_face_cords(image_data)
-        return JsonResponse(coordinates, safe=False)
+        action = recognize_action(image_data)
+        print(action)
+        return JsonResponse({'coordinates': coordinates, 'action': action}, safe=False)
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
@@ -72,16 +76,42 @@ def process_question_ajax(request):
             data = json.loads(request.body)
             question = data.get('text', '')
 
-            # Отправка запроса на AI-сервис с использованием urllib
-            ai_url = 'https://foteapi2.pythonanywhere.com/process'
-            headers = {'Content-Type': 'application/json'}
-            payload = json.dumps({'request_type': 'robot_question_answering', 'text': question}).encode('utf-8')
+            # Отправка запроса на AI-сервис
+            ai_url = ' http://api.freil.ru/generate'
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': '4Ikp8h-YohTlxJtAhquvveS0LjfTnh0fVK4R0S-YZek'
+            }
+            payload = {
+                "api_key": "RiV544NRwNLTcH8rLIAefu2_ffCHAVRfFwtgnmikwkY",
+                "model": "llama-3.3-70b-versatile", 
+                "model_key": "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",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Ты — голосовой помощник РЖД. Отвечай максимально кратко, не больше 2 предложений на вопросы о поездах, билетах и сервисах. Если вопрос не ясен, попроси уточнения для правильного понимания запроса. Будь вежлив и всегда готов помочь пассажирам."
+                    },
+                    {
+                        "role": "user", 
+                        "content": question
+                    }
+                ],
+                "temperature": 1,
+                "max_tokens": 1024,
+                "top_p": 1,
+                "stream": False,
+                "stop": None
+            }
 
-            req = urllib.request.Request(ai_url, data=payload, headers=headers)
+            req = urllib.request.Request(
+                ai_url,
+                data=json.dumps(payload).encode('utf-8'),
+                headers=headers
+            )
             with urllib.request.urlopen(req) as response:
                 response_data = json.loads(response.read().decode('utf-8'))
 
-            return JsonResponse({'response': response_data})
+            return JsonResponse({'response': response_data['answer']})
 
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Произошла ошибка при генерации ответа'}, status=400)

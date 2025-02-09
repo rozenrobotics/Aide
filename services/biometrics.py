@@ -6,13 +6,19 @@ import numpy as np
 from users.models import TrainTicket, TrainInfo
 
 
+
 def recognize_face(photo_data, cruise_id):
     """Вернет 0 если на фото нет лиц, 1 если лица нет в базе рейса, {first_name, last_name, seat_number} если пассажир найден"""
     image_data = base64.b64decode(photo_data.split(',')[1])
     image = Image.open(BytesIO(image_data))
 
+    # Конвертируем в RGB перед сохранением
     if image.mode != 'RGB':
         image = image.convert('RGB')
+        
+    # Поворачиваем изображение на 180 градусов
+    image = image.rotate(180)
+
 
     image_np = np.array(image)
     face_encodings = face_recognition.face_encodings(image_np)
