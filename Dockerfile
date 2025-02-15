@@ -1,10 +1,18 @@
 # Используем официальный образ Python
 FROM python:3.9-slim
 
-# Устанавливаем зависимости
+# Устанавливаем необходимые зависимости
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libsqlite3-dev
+    cmake \
+    libsqlite3-dev \
+    libopenblas-dev \
+    liblapack-dev \
+    libx11-dev \
+    libatlas-base-dev \
+    libgtk-3-dev \
+    python3-dev \
+    python3-pip
 
 # Создаем рабочую директорию
 WORKDIR /app
@@ -20,8 +28,9 @@ COPY . /app/
 RUN python manage.py migrate
 RUN python manage.py collectstatic --noinput
 
-
+# Устанавливаем gunicorn
 RUN pip install gunicorn
+
 # Открываем порт
 EXPOSE 8000
 
