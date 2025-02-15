@@ -122,11 +122,11 @@ STATIC_URL = '/static/'
 
 
 MEDIA_URL = '/media/'
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-    # другие директории, если есть
-]
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+#     # другие директории, если есть
+# ]
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
