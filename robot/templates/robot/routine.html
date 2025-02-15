@@ -645,6 +645,7 @@
                             eyeRight.style.left = `${eyeRightX}%`;
                             eyeRight.style.top = `${eyeRightY}%`;
                         }
+                        console.log(data);
                     })
                     .catch(error => console.error('Error:', error));
             };
@@ -654,7 +655,7 @@
     }
 
     // Send a frame every second
-    setInterval(sendFrame, 1000);
+    setInterval(sendFrame, 2000);
 </script>
 </body>
 </html>
