@@ -26,7 +26,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -120,7 +119,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-
 MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # STATICFILES_DIRS = [
@@ -134,9 +132,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 TRAIN_NUMBER = 52
 LOCAL_SERVER_URL = "127.0.0.1:8000"
 ROBOT_MALINA_SERVER_URL = "127.0.0.1:8002"
 
-CORS_ALLOWED_ORIGINS = ["*"]
+CSRF_TRUSTED_ORIGINS = ["robot.aide.su", "portal.aide.su"]
