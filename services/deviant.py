@@ -11,6 +11,7 @@ processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 # Очередь для хранения последних действий
 action_history = deque(maxlen=5)
 
+
 def recognize_action(image_data):
     """
     Распознает действие на изображении и определяет девиантное поведение
@@ -21,11 +22,11 @@ def recognize_action(image_data):
     """
     # Преобразование байтов в изображение
     image = Image.open(io.BytesIO(image_data))
-    
+
     # Список возможных действий
     normal_actions = [
         "person is eating",
-        "person is sitting", 
+        "person is sitting",
         "person is standing",
         "person is talking with other passengers",
         "person is walking through the train car"
@@ -35,7 +36,7 @@ def recognize_action(image_data):
         "person is smoking",
         "person is fighting",
         "person is harassing passengers",
-        "person is making noise", 
+        "person is making noise",
         "person is littering",
         "person is carrying dangerous items",
         "person is threatening passengers",
@@ -55,13 +56,13 @@ def recognize_action(image_data):
 
     # Определение действия с наибольшей вероятностью
     predicted_action = actions[probs.argmax()]
-    
+
     # Определяем тип действия (0 - нормальное, 1 - девиантное)
     is_deviant = 1 if predicted_action in deviant_actions else 0
-    
+
     # Добавляем результат в историю
     action_history.append(is_deviant)
-    
+
     # Проверяем историю на устойчивое девиантное поведение
     if len(action_history) == 4:
         deviant_count = sum(action_history)
@@ -69,5 +70,5 @@ def recognize_action(image_data):
         # Возвращаем 1, если 4 или более действий девиантные (допуская одно нормальное)
         if deviant_count >= 3:
             return 1
-            
+
     return 0
