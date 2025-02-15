@@ -136,4 +136,4 @@ TRAIN_NUMBER = 52
 LOCAL_SERVER_URL = "127.0.0.1:8000"
 ROBOT_MALINA_SERVER_URL = "127.0.0.1:8002"
 
-CSRF_TRUSTED_ORIGINS = ["robot.aide.su", "portal.aide.su"]
+CSRF_TRUSTED_ORIGINS = ["https://robot.aide.su", "https://portal.aide.su"]
