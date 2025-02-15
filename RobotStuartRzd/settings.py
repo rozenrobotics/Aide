@@ -142,3 +142,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ROBOT_SERVER_URL = "127.0.0.1:8001"
+
+CSRF_TRUSTED_ORIGINS = ["https://robot.aide.su", "https://portal.aide.su"]
