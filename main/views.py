@@ -146,7 +146,7 @@ def pay_ticket_status(request, order_id):
                 return render(request, 'main/success_ticket.html', {'ticket_order': ticket_order})
     except Exception as e:
         print(e)
-    return render(request, 'main/failure_ticket.html')
+        return render(request, 'main/failure_ticket.html', context={'error': str(e)})
 
 @login_required(login_url='login')
 def pay_ticket_test(request, order_id):
