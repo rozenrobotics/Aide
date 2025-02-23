@@ -14,6 +14,7 @@ User = get_user_model()
 class MyLoginView(LoginView):
     template_name = 'users/login.html'
     form_class = AuthenticationForm
+    redirect_authenticated_user = True
 
 
 from .models import TrainCruise, TrainTicket
