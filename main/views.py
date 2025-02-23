@@ -21,6 +21,7 @@ from RobotStuartRzd.keys import youmoney_token
 def index(request):
     return render(request, 'main/index.html')
 
+
 @login_required(login_url='login')
 def check_in(request):
     if request.method == 'POST':
@@ -47,8 +48,10 @@ def check_in(request):
     return render(request, 'main/check_in.html',
                   context={'is_bio': BiometricProfile.objects.filter(user=request.user).exists()})
 
+
 def error(request):
     return render(request, 'main/error.html')
+
 
 @login_required(login_url='login')
 def purchase_ticket(request):
@@ -64,8 +67,8 @@ def purchase_ticket(request):
 
             # Проверяем, не занято ли место
             if TrainTicket.objects.filter(train=train, seat_number=seat_number).exists():
-                return render(request, 'main/purchase_ticket.html', 
-                            {'error': 'Это место уже занято. Пожалуйста, выберите другое.'})
+                return render(request, 'main/purchase_ticket.html',
+                              {'error': 'Это место уже занято. Пожалуйста, выберите другое.'})
 
             # Создаём заказ билета с фиксированной стоимостью и уникальной меткой
             label = str(uuid.uuid4())
@@ -77,24 +80,26 @@ def purchase_ticket(request):
             )
             # Перенаправляем на страницу выбора способа оплаты
             return redirect('payment_options', order_id=ticket_order.id)
-        except:
-            return redirect('error')
+        except Exception as e:
+            return render(request, 'main/failure_ticket.html',
+                          {'error': str(e)})
     else:
         # Получаем все поезда
         trains = TrainCruise.objects.all()
         trains_with_seats = []
-        
+
         for train in trains:
             # Получаем все занятые места для поезда
             occupied_seats = set(TrainTicket.objects.filter(train=train).values_list('seat_number', flat=True))
             # Создаем список свободных мест
             available_seats = [i for i in range(1, train.seat_count + 1) if i not in occupied_seats]
-            
+
             if available_seats:  # Если есть свободные места
                 train.available_seats = available_seats
                 trains_with_seats.append(train)
-        
+
         return render(request, 'main/purchase_ticket.html', {'trains': trains_with_seats})
+
 
 @login_required(login_url='login')
 def payment_options(request, order_id):
@@ -103,6 +108,7 @@ def payment_options(request, order_id):
     """
     ticket_order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
     return render(request, 'main/payment_options.html', {'order': ticket_order})
+
 
 @login_required(login_url='login')
 def pay_ticket_yoomoney(request, order_id):
@@ -121,6 +127,7 @@ def pay_ticket_yoomoney(request, order_id):
     )
     return redirect(quickpay.redirected_url)
 
+
 @login_required(login_url='login')
 def pay_ticket_status(request, order_id):
     """
@@ -128,7 +135,7 @@ def pay_ticket_status(request, order_id):
     После подтверждения оплаты билет отмечается как приобретённый.
     """
     ticket_order = get_object_or_404(TicketOrder, id=order_id, user=request.user)
-    token = youmoney_token 
+    token = youmoney_token
     client = Client(token)
     try:
         history = client.operation_history(label=ticket_order.yoomoney_label)
@@ -147,6 +154,7 @@ def pay_ticket_status(request, order_id):
     except Exception as e:
         print(e)
         return render(request, 'main/failure_ticket.html', context={'error': str(e)})
+
 
 @login_required(login_url='login')
 def pay_ticket_test(request, order_id):
