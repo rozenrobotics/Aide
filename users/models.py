@@ -50,7 +50,7 @@ class RobotProfile(models.Model):
 
 class TicketOrder(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    train_cruise = models.OneToOneField(TrainCruise, on_delete=models.CASCADE, null=True, blank=True, unique=False)
+    train_cruise = models.ForeignKey(TrainCruise, on_delete=models.CASCADE, null=True, blank=True)
     seat_number = models.IntegerField(default=0)
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
