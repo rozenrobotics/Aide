@@ -4,6 +4,8 @@ import base64
 from io import BytesIO
 from PIL import Image
 import numpy as np
+
+
 from users.models import BiometricProfile, TrainTicket
 
 
@@ -23,16 +25,12 @@ def register_face(photo_data, user):
 
     if face_encodings:
         face_encoding = face_encodings[0]  # Используем первое найденное лицо
-
-        try:
-            bio_entry = BiometricProfile.objects.create(
-                user=user,
-                face_data=face_encoding
-            )
-        except BiometricProfile.DoesNotExist:
-            bio_entry = BiometricProfile.objects.get(user=user)
-            # Обновите запись, если найдена
-            bio_entry.face_data = face_encoding  # Обновите с новым значением
+        bio_entry, created = BiometricProfile.objects.get_or_create(
+            user=user,
+            defaults={'face_data': face_encoding}
+        )
+        if not created:
+            bio_entry.face_data = face_encoding
             bio_entry.save()
 
         return bio_entry.id  # Возвращаем ID записи в биометрической базе
