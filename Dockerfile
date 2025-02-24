@@ -19,6 +19,12 @@ WORKDIR /app
 
 # Копируем файлы зависимостей и устанавливаем их
 COPY requirements.txt /app/
+  # Добавьте перед установкой зависимостей Python
+RUN apt-get update && apt-get install -y cmake
+
+ # Установите dlib из исходников
+RUN pip install dlib==19.24.0  # Убедитесь, что используете совместимую версию
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем остальные файлы проекта
