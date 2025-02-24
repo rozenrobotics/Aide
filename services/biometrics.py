@@ -4,6 +4,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 import numpy as np
+import json
 
 
 from users.models import BiometricProfile, TrainTicket
@@ -24,13 +25,13 @@ def register_face(photo_data, user):
     face_encodings = face_recognition.face_encodings(image_np)
 
     if face_encodings:
-        face_encoding = face_encodings[0]  # Используем первое найденное лицо
+        face_encoding = face_encodings[0].tolist()  # Преобразуем в list (Python-совместимый тип)
         bio_entry, created = BiometricProfile.objects.get_or_create(
             user=user,
-            defaults={'face_data': face_encoding}
+            defaults={'face_data': json.dumps(face_encoding)}
         )
         if not created:
-            bio_entry.face_data = face_encoding
+            bio_entry.face_data = json.dumps(face_encoding)
             bio_entry.save()
 
         return bio_entry.id  # Возвращаем ID записи в биометрической базе
@@ -57,7 +58,7 @@ def recognize_face(photo_data, cruise_id):
         biometric_profiles = BiometricProfile.objects.filter(user__in=users_with_tickets)
 
         for entry in biometric_profiles:
-            known_face_encoding = np.frombuffer(entry.face_data, dtype=np.float64)
+            known_face_encoding = np.array(json.loads(entry.face_data))
             results = face_recognition.compare_faces([known_face_encoding], face_encoding, tolerance=0.6)
 
             if results[0]:
