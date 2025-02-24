@@ -34,7 +34,7 @@ class TrainTicket(models.Model):
 
 class BiometricProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    face_data = models.BinaryField()  # Сохранение бинарных данных для фото
+    face_image = models.ImageField(upload_to='biometric_faces/', null=True, blank=True)  # Поле для хранения изображения лица
 
     def __str__(self):
         return f"{self.user.username}"

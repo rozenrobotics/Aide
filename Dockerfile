@@ -12,19 +12,17 @@ RUN apt-get update && apt-get install -y \
     libatlas-base-dev \
     libgtk-3-dev \
     python3-dev \
-    python3-pip
+    python3-pip \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev
 
 # Создаем рабочую директорию
 WORKDIR /app
 
 # Копируем файлы зависимостей и устанавливаем их
 COPY requirements.txt /app/
-  # Добавьте перед установкой зависимостей Python
-RUN apt-get update && apt-get install -y cmake
-
- # Установите dlib из исходников
-RUN pip install dlib==19.24.0  # Убедитесь, что используете совместимую версию
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем остальные файлы проекта
@@ -42,4 +40,4 @@ RUN pip install gunicorn
 EXPOSE 8000
 
 # Запускаем приложение
-CMD ["gunicorn", "RobotStuartRzd.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "RobotStuartRzd.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
