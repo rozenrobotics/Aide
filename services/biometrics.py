@@ -23,20 +23,21 @@ def register_face(photo_data, user):
     image_np = np.array(image)
     # Поиск лиц на изображении
     face_encodings = face_recognition.face_encodings(image_np)
+    return 1
 
-    if face_encodings:
-        face_encoding = face_encodings[0].tolist()  # Преобразуем в list (Python-совместимый тип)
-        bio_entry, created = BiometricProfile.objects.get_or_create(
-            user=user,
-            defaults={'face_data': json.dumps(face_encoding)}
-        )
-        if not created:
-            bio_entry.face_data = json.dumps(face_encoding)
-            bio_entry.save()
-
-        return bio_entry.id  # Возвращаем ID записи в биометрической базе
-
-    return None  # Если лицо не было найдено
+    # if face_encodings:
+    #     face_encoding = face_encodings[0].tolist()  # Преобразуем в list (Python-совместимый тип)
+    #     bio_entry, created = BiometricProfile.objects.get_or_create(
+    #         user=user,
+    #         defaults={'face_data': json.dumps(face_encoding)}
+    #     )
+    #     if not created:
+    #         bio_entry.face_data = json.dumps(face_encoding)
+    #         bio_entry.save()
+    #
+    #     return bio_entry.id  # Возвращаем ID записи в биометрической базе
+    #
+    # return None  # Если лицо не было найдено
 
 
 def recognize_face(photo_data, cruise_id):
