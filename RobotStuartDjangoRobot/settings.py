@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-o!s9f0+7cg!b)fdfd!rl(cgbde-=xn9lc=aw(&)@b$iv5xh_k^wola'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'robot',
     'users',
     'conditions',
@@ -133,7 +134,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TRAIN_NUMBER = 52
-LOCAL_SERVER_URL = "127.0.0.1:8000"
+LOCAL_SERVER_URL = "172.20.10.5:8000"
 ROBOT_MALINA_SERVER_URL = "127.0.0.1:8002"
 
 CSRF_TRUSTED_ORIGINS = ["https://robot.aide.su", "https://portal.aide.su"]
+
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True

@@ -30,14 +30,14 @@
             width: 220px;
             height: 280px;
             border-radius: 50%;
-            border: 30px solid #7BA5F7; /* Толщина окантовки */
+            border: 30px solid rgba(0, 255, 61, 0.69); /* Толщина окантовки */
             background-color: transparent; /* Прозрачный фон */
             background-clip: padding-box; /* Оставляем фон только в рамке */
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 50px rgba(123, 165, 247, 1), /* Внешняя тень */ inset 0 0 40px rgba(123, 165, 247, 1); /* Внутренняя тень */
+            box-shadow: 0 0 50px rgba(0, 255, 61, 0.69), /* Внешняя тень */ inset 0 0 40px rgba(0, 255, 61, 0.69); /* Внутренняя тень */
             animation: eye-move 4s infinite;
         }
 
@@ -173,7 +173,7 @@
         }
 
         .bar {
-            background: #7BA5F7;
+            background: rgba(0, 255, 61, 0.69);
             bottom: 1px;
             height: 3px;
             width: 10px;
@@ -252,7 +252,7 @@
         }
 
         .loader {
-            color: #7BA5F7;
+            color: rgba(0, 255, 61, 0.69);
             font-size: 10px;
             position: absolute;
             display: flex;
@@ -301,8 +301,8 @@
             color: #fff;
             padding: 0;
             margin: 0;
-            background: #7BA5F7;
-            box-shadow: 0 0 20px #7BA5F7;
+            background: rgba(0, 255, 61, 0.69);
+            box-shadow: 0 0 20px rgba(0, 255, 61, 0.69);
             position: relative;
             display: inline-block;
             line-height: 50px;
@@ -323,13 +323,13 @@
             content: '';
             width: 60px;
             height: 60px;
-            border: 5px solid #7BA5F7;
+            border: 5px solid #00FF3DAF;
             border-radius: 50%;
             position: absolute;
             top: -5px;
             left: -5px;
             animation: pulsate infinite 2s;
-            box-shadow: 0 0 20px #7BA5F7;
+            box-shadow: 0 0 20px #00FF3DAF;
         }
 
         @-webkit-keyframes pulsate {

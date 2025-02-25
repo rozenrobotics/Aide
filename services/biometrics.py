@@ -33,7 +33,7 @@ def recognize_face(photo_data, cruise_id):
             # Проверяем, если face_data не пустой
             if ticket.face_data:
                 known_face_encoding = np.frombuffer(ticket.face_data, dtype=np.float64)
-                results = face_recognition.compare_faces([known_face_encoding], face_encoding, tolerance=0.6)
+                results = face_recognition.compare_faces([known_face_encoding], face_encoding, tolerance=0.5)
 
                 if results[0]:
                     return {

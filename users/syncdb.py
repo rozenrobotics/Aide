@@ -1,19 +1,24 @@
 import base64
 import requests
+import urllib3
 from django.conf import settings
 from users.models import TrainTicket, TrainInfo
+from urllib3.exceptions import InsecureRequestWarning
+
 
 def sync_train_data():
     """
     Синхронизация данных поезда и билетов из удаленного сервера.
     Обновляет запись в модели TrainInfo и создает новые записи в TrainTicket.
     """
+    urllib3.disable_warnings(InsecureRequestWarning)
+
     # Получение номера поезда из настроек
     train_number = settings.TRAIN_NUMBER
-    SERVER_URL = f'http://{settings.LOCAL_SERVER_URL}/users/api/get_train_data/{train_number}/'
+    SERVER_URL = f'https://{settings.LOCAL_SERVER_URL}/users/api/get_train_data/{train_number}/'
 
     try:
-        response = requests.get(SERVER_URL)
+        response = requests.get(SERVER_URL, verify=False)
         response.raise_for_status()  # Выбросит исключение для статусов ошибок (4xx, 5xx)
         data = response.json()
 
