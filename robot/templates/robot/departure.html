@@ -43,6 +43,14 @@
 
 {% block js %}
     <script>
+        // Начинаем прослушивание после первого нажатия
+    document.body.addEventListener('click', () => {
+       
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log(`Ошибка включения полноэкранного режима: ${err.message}`);
+        });
+    }, {once: true});
+
         document.addEventListener("DOMContentLoaded", function () {
             const videoCanvas = document.getElementById('video-canvas');
             let stream;

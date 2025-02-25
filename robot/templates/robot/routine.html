@@ -395,6 +395,8 @@
 </div>
 
 <script>
+
+
     window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     const recognition = new SpeechRecognition();
@@ -402,6 +404,7 @@
     recognition.interimResults = false;
     recognition.continuous = true;
     let userStartedSpeaking = false;
+    let isRobotSpeak = false;
 
     let isListeningForCommand = false;
     let chatHistory = [];
@@ -429,6 +432,8 @@
         // Останавливаем распознавание во время озвучивания
         recognition.stop();
         setStatus('speaking');
+
+        isRobotSpeak = true;
         synth.speak(utterance);
 
         // Отслеживаем окончание озвучивания
@@ -437,6 +442,7 @@
             setStatus('listening');
             recognition.start();
             userStartedSpeaking = false;
+            isRobotSpeak = false;
 
             // Установка таймера на 10 секунд
             stopListeningTimeout = setTimeout(() => {
@@ -461,6 +467,7 @@
             userStartedSpeaking = true;
             clearTimeout(stopListeningTimeout); // Сброс таймера, если пользователь начал говорить
         }
+        console.log(transcript.toLowerCase());
 
         if (!isListeningForCommand && transcript.toLowerCase().includes("алиса")) {
             isListeningForCommand = true;
@@ -524,7 +531,12 @@
         if (!isListeningForCommand) {
             setStatus('idle');
             recognition.start(); // Цикличное прослушивание
+        } else if (!isRobotSpeak){
+            setTimeout(() => {
+                recognition.start();
+            }, 100);
         }
+
     };
 
     // Начинаем прослушивание после первого нажатия
@@ -532,6 +544,10 @@
         if (!recognition.running) {
             startRecognition();
         }
+        // Запрос полноэкранного режима при первом клике
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log(`Ошибка включения полноэкранного режима: ${err.message}`);
+        });
     }, {once: true});
 
     // Очистка истории чата каждые 2 минуты
@@ -645,7 +661,7 @@
                             eyeRight.style.left = `${eyeRightX}%`;
                             eyeRight.style.top = `${eyeRightY}%`;
                         }
-                        console.log(data);
+                        //  console.log(data);
                     })
                     .catch(error => console.error('Error:', error));
             };
