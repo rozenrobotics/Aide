@@ -44,17 +44,19 @@
 {% block js %}
     <script>
         // Начинаем прослушивание после первого нажатия
-    document.body.addEventListener('click', () => {
-       
-        document.documentElement.requestFullscreen().catch(err => {
-            console.log(`Ошибка включения полноэкранного режима: ${err.message}`);
-        });
-    }, {once: true});
+        document.body.addEventListener('click', () => {
+
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Ошибка включения полноэкранного режима: ${err.message}`);
+            });
+        }, {once: true});
 
         document.addEventListener("DOMContentLoaded", function () {
             const videoCanvas = document.getElementById('video-canvas');
             let stream;
             let recognitionInProgress = false;
+            let noFaceCounter = 0;
+            let lastAnnouncementTime = 0;
 
             navigator.mediaDevices.getUserMedia({video: true})
                 .then(cameraStream => {
@@ -80,6 +82,17 @@
                     console.error("Ошибка при доступе к камере:", error);
                 });
 
+            function announceInvitation() {
+                const currentTime = Date.now();
+                if (currentTime - lastAnnouncementTime > 10000) { // Проверяем, прошло ли 10 секунд с последнего объявления
+                    const message = "Уважаемые пассажиры! Подойдите, пожалуйста, к терминалу для регистрации!";
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.lang = 'ru-RU';
+                    window.speechSynthesis.speak(utterance);
+                    lastAnnouncementTime = currentTime;
+                }
+            }
+
             function takeAndSendPhoto() {
                 if (recognitionInProgress) return;
 
@@ -104,14 +117,29 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            return showSweetAlert('success', 'Авторизация прошла успешно', `Здравствуйте, ${data.data.user_name}! Ваше место ${data.data.seat_number}, хорошей поездки!`, 4000);
+                            noFaceCounter = 0;
+                            const message = `Здравствуйте, ${data.data.user_name}! Ваше место ${data.data.seat_number}, хорошей поездки!`;
+                            const utterance = new SpeechSynthesisUtterance(message);
+                            utterance.lang = 'ru-RU';
+                            window.speechSynthesis.speak(utterance);
+                            return showSweetAlert('success', 'Авторизация прошла успешно', message, 8000);
                         } else if (data.status === 'not_registered') {
-                            return showSweetAlert('error', 'Вас нет в списке быстрого прохода!', 'Подойдите к проводнику для входа в поезд.', 2000);
+                            noFaceCounter = 0;
+                            const message = 'Вас нет в списке быстрого прохода! Попробуйте отсканировать лицо еще раз или подойдите к проводнику для входа в поезд.';
+                            const utterance = new SpeechSynthesisUtterance(message);
+                            utterance.lang = 'ru-RU';
+                            window.speechSynthesis.speak(utterance);
+                            return showSweetAlert('error', 'Вас нет в списке быстрого прохода!', message, 8000);
+                        } else {
+                            noFaceCounter++;
+                            if (noFaceCounter >= 10) {
+                                announceInvitation();
+                            }
                         }
                     })
                     .catch(error => {
                         console.error('Ошибка при распознавании лица:', error);
-                        return showSweetAlert('error', 'Ошибка!', 'Произошла ошибка, попробуйте снова.', 2000);
+                        return showSweetAlert('error', 'Ошибка!', 'Произошла ошибка, попробуйте снова.', 5000);
                     })
                     .finally(() => {
                         // Задержка перед продолжением работы

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -17,6 +18,15 @@
             overflow: hidden;
         }
 
+        .qr-code {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            z-index: 9999;
+        }
+
         .robot {
             display: flex;
             justify-content: space-around;
@@ -30,14 +40,14 @@
             width: 220px;
             height: 280px;
             border-radius: 50%;
-            border: 30px solid rgba(0, 255, 61, 0.69); /* Толщина окантовки */
+            border: 30px solid rgb(255, 0, 71); /* Толщина окантовки */
             background-color: transparent; /* Прозрачный фон */
             background-clip: padding-box; /* Оставляем фон только в рамке */
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 50px rgba(0, 255, 61, 0.69), /* Внешняя тень */ inset 0 0 40px rgba(0, 255, 61, 0.69); /* Внутренняя тень */
+            box-shadow: 0 0 50px rgb(255, 0, 71), /* Внешняя тень */ inset 0 0 40px rgb(255, 0, 71); /* Внутренняя тень */
             animation: eye-move 4s infinite;
         }
 
@@ -173,7 +183,7 @@
         }
 
         .bar {
-            background: rgba(0, 255, 61, 0.69);
+            background: rgb(255, 0, 71);
             bottom: 1px;
             height: 3px;
             width: 10px;
@@ -252,7 +262,7 @@
         }
 
         .loader {
-            color: rgba(0, 255, 61, 0.69);
+            color: rgb(255, 0, 71);
             font-size: 10px;
             position: absolute;
             display: flex;
@@ -301,8 +311,8 @@
             color: #fff;
             padding: 0;
             margin: 0;
-            background: rgba(0, 255, 61, 0.69);
-            box-shadow: 0 0 20px rgba(0, 255, 61, 0.69);
+            background: rgb(255, 0, 71);
+            box-shadow: 0 0 20px rgb(255, 0, 71);
             position: relative;
             display: inline-block;
             line-height: 50px;
@@ -323,13 +333,13 @@
             content: '';
             width: 60px;
             height: 60px;
-            border: 5px solid #00FF3DAF;
+            border: 5px solid #ff0047;
             border-radius: 50%;
             position: absolute;
             top: -5px;
             left: -5px;
             animation: pulsate infinite 2s;
-            box-shadow: 0 0 20px #00FF3DAF;
+            box-shadow: 0 0 20px #ff0047;
         }
 
         @-webkit-keyframes pulsate {
@@ -357,6 +367,7 @@
     </style>
 </head>
 <body>
+<img src="{% static 'qr.svg' %}" class="qr-code" alt="QR Code">
 <form method="post">
     {% csrf_token %}
 </form>
@@ -469,7 +480,11 @@
         }
         console.log(transcript.toLowerCase());
 
-        if (!isListeningForCommand && transcript.toLowerCase().includes("алиса")) {
+        if (transcript.toLowerCase().includes("кричалка")) {
+           speakText("Быстро мчится наш экспресс,Робот-стюард - наш прогресс! Никогда не устаёт - Поможет он и развлечёт!");
+        }
+
+        if (!isListeningForCommand && transcript.toLowerCase().includes("галя")) {
             isListeningForCommand = true;
             setStatus('listening');
             userStartedSpeaking = false;
@@ -509,7 +524,7 @@
             } catch (error) {
                 console.error("Ошибка:", error);
                 setStatus('idle');
-                loaderElement.innerText = "Произошла ошибка, скажите 'Алиса' для повторного начала.";
+                loaderElement.innerText = "Произошла ошибка, скажите 'галя' для повторного начала.";
                 isListeningForCommand = false;
                 recognition.start();
             }
@@ -573,7 +588,7 @@
             case 'idle':
                 leftEye.style.animation = 'eye-move 5s infinite';
                 rightEye.style.animation = 'eye-move 5s infinite';
-                statusText.textContent = 'Скажите "Алиса", чтобы начать';
+                statusText.textContent = 'Скажите "галя", чтобы начать';
                 fetch('{% url 'stop_talking_ajax' %}')
                     .then(response => response.json())
                     .then(data => console.log(data))
@@ -661,7 +676,16 @@
                             eyeRight.style.left = `${eyeRightX}%`;
                             eyeRight.style.top = `${eyeRightY}%`;
                         }
-                        //  console.log(data);
+                        if (data.action !== 0){
+                            if (isRobotSpeak) {
+                                window.speechSynthesis.cancel();
+                            }
+                            const warningMessage = "Внимание, уважаемые пассажиры! Пожалуйста, прекратите нарушать правила!";
+                            const utterance = new SpeechSynthesisUtterance(warningMessage);
+                            utterance.lang = 'ru-RU';
+                            window.speechSynthesis.speak(utterance);
+                        }
+                         // console.log(data);
                     })
                     .catch(error => console.error('Error:', error));
             };
@@ -671,7 +695,33 @@
     }
 
     // Send a frame every second
-    setInterval(sendFrame, 1000);
+    setInterval(sendFrame, 500);
 </script>
+<script>
+    let warningCount = 0;
+    
+    function checkLidar() {
+        
+        
+        fetch('{% url 'get_lidar_value' %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.lidar === 1 && warningCount < 3) {
+                    const message = "Внимание! Роботу преграждён путь. Пожалуйста, осовободите пространство!";
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.lang = 'ru-RU';
+                    window.speechSynthesis.speak(utterance);
+                    warningCount++;
+                }
+                else if (data.lidar === 0) {
+                    warningCount = 0;
+                }
+            })
+            .catch(error => console.error('Ошибка:', error));
+    }
+
+    setInterval(checkLidar, 1000);
+</script>
+
 </body>
 </html>

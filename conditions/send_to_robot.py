@@ -15,14 +15,7 @@ def process_order(data):
     seat_id = data.get('seat_id')
     print(order_id, product_id, product_name, product_category, seat_id)
 
-    # Сериализация данных в JSON и кодирование в байты
-    json_data = json.dumps(data).encode('utf-8')
-
-    ai_url = f'http://{settings.ROBOT_MALINA_SERVER_URL}/process_order'
-    headers = {'Content-Type': 'application/json'}
-
-    # Создание запроса с закодированными данными
-    req = urllib.request.Request(ai_url, data=json_data, headers=headers)
+    
 
 
 def start_talking():

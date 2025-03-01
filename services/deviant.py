@@ -3,6 +3,7 @@ from PIL import Image
 import torch
 import io
 from collections import deque
+from conditions.views import set_deviant
 
 # Загрузка модели CLIP
 model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
@@ -37,10 +38,7 @@ def recognize_action(image_data):
         "person is fighting",
         "person is harassing passengers",
         "person is making noise",
-        "person is littering",
         "person is carrying dangerous items",
-        "person is threatening passengers",
-        "person is climbing on seats"
     ]
 
     actions = normal_actions + deviant_actions
@@ -69,6 +67,7 @@ def recognize_action(image_data):
         action_history.clear()
         # Возвращаем 1, если 4 или более действий девиантные (допуская одно нормальное)
         if deviant_count >= 3:
+            set_deviant(True)
             return 1
 
     return 0
