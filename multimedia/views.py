@@ -2,6 +2,7 @@ import json
 import urllib.request
 import urllib.parse
 
+import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from yoomoney import Quickpay, Client
@@ -13,6 +14,47 @@ import uuid
 from RobotStuartRzd.keys import youmoney_token
 from robot.send_to_robot import procces_order
 from users.models import User, TrainTicket
+from urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+
+
+class RobotAPI:
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.verify = False
+        # Инициализируем переменные для хранения значений
+        self.deviant = None
+        self.lidar = None
+
+    def get_deviant_value(self):
+        """
+        Получить значение места работы робота
+        """
+        try:
+            response = self.session.get(f"https://172.20.10.5:8001/conditions/get_deviant_value")
+            data = response.json()
+            self.deviant = data.get('deviant')
+            return self.deviant
+
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка при получении значения места работы робота: {e}")
+            return None
+    def get_lidar_value(self):
+        """
+        Получить значение места работы робота
+        """
+        try:
+            response = self.session.get(f"https://172.20.10.5:8001/conditions/get_lidar_value")
+            data = response.json()
+            self.lidar = data.get('lidar')
+            return self.lidar
+
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка при получении значения места работы робота: {e}")
+            return None
+
 
 
 @login_required(login_url='login')
@@ -37,6 +79,7 @@ def create_payment(request, product):
         user=user,
         yoomoney_label=label,
         product=Product.objects.get(id=product),
+        seat_number=TrainTicket.objects.filter(user=user).last().seat_number,
 
     )
 
@@ -167,3 +210,48 @@ def test_payment(request, product):
     # Отображаем страницу успешной оплаты
     return render(request, 'multimedia/success.html')
 
+@csrf_exempt
+def get_all_orders(request):
+    orders = UserOrder.objects.filter(is_done=False)
+    orders_data = [{
+        'is_take_in_robot': order.is_take_in_robot,
+        'seat': order.seat,
+    } for order in orders]
+    return JsonResponse({'orders': orders_data}, status=200)
+
+@csrf_exempt
+def end_order(request, seat):
+    orders = UserOrder.objects.filter(is_done=False, seat=seat)
+    for order in orders:
+        order.is_done = True
+        order.save()
+    return JsonResponse({'status': 'success'}, status=200)
+
+def stuart(request):
+    return render(request, 'multimedia/stuart.html')
+
+
+@csrf_exempt
+def get_data(request):
+    orders = UserOrder.objects.filter(is_done=False, is_take_in_robot=False)
+    orders_data = []
+    for order in orders:
+        orders_data.append({
+            'name': order.product.name,
+            'status': order.is_take_in_robot,
+            'order_id': order.id,
+        })
+
+
+    return JsonResponse({
+        'orders': orders_data,
+        'is_alert': RobotAPI().get_deviant_value(),
+        'is_stopped': RobotAPI().get_lidar_value() == 2,
+    }, status=200)
+
+@csrf_exempt
+def take_order_in_robot(request, order_id):
+    order = UserOrder.objects.get(id=order_id)
+    order.is_take_in_robot = True
+    order.save()
+    return JsonResponse(status=200)

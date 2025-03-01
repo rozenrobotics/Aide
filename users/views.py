@@ -33,7 +33,7 @@ def get_train_data(request, train_number):
             'tickets': [
                 {
                     'user_id': ticket.user.id,
-                    'face_data': base64.b64encode(ticket.user.biometricprofile.face_data).decode('utf-8') if ticket.user.biometricprofile else None,
+                    'face_data': base64.b64encode(ticket.user.biometricprofile.face_data).decode('utf-8') if hasattr(ticket.user, 'biometricprofile') and ticket.user.biometricprofile else None,
                     'seat_number': ticket.seat_number,
                     'created_at': ticket.created_at,
                     'user_name': f"{ticket.user.first_name} {ticket.user.last_name}",
@@ -44,12 +44,16 @@ def get_train_data(request, train_number):
     except TrainCruise.DoesNotExist:
         return JsonResponse({'error': 'Train not found'}, status=404)
 
-
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+            user.first_name = first_name
+            user.last_name = last_name
+            user.save()
             login(request, user)
             return redirect('index')
     else:

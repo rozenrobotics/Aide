@@ -28,6 +28,8 @@ class UserOrder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=False)
     is_done = models.BooleanField(default=False)
+    is_take_in_robot = models.BooleanField(default=False)
+    seat = models.PositiveSmallIntegerField(default=1)
     yoomoney_label = models.CharField(max_length=255, unique=True)  # Уникальная метка для оплаты через YooMoney
 
     def __str__(self):

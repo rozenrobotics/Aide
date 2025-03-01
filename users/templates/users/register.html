@@ -13,6 +13,22 @@
                     <div class="auth-credentials m-b-xxl">
                         <form action="{% url 'register' %}" method="post">
                             {% csrf_token %}
+                            <div class="form-floating form-floating-outline mb-5">
+                                <input type="text"
+                                       name="first_name"
+                                       id="id_first_name"
+                                       class="form-control"
+                                       placeholder="Имя" />
+                                <label for="id_first_name">Имя</label>
+                            </div>
+                            <div class="form-floating form-floating-outline mb-5">
+                                <input type="text"
+                                       name="last_name" 
+                                       id="id_last_name"
+                                       class="form-control"
+                                       placeholder="Фамилия" />
+                                <label for="id_last_name">Фамилия</label>
+                            </div>
                             {% for field in form %}
                                 <div class="form-floating form-floating-outline mb-5">
                                     <input type="{{ field.field.widget.input_type }}" 

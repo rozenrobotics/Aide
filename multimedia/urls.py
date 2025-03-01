@@ -13,4 +13,13 @@ urlpatterns = [
 
     path('gpt', views.gpt, name='gpt'),
     path('process_question_ajax/', views.process_question_ajax, name='process_question_ajax'),
+
+    path('get_all_orders', views.get_all_orders),
+    path('end_order/<int:seat>', views.end_order),
+    path('take_order_in_robot/<int:order_id>', views.take_order_in_robot, name="take_order_in_robot"),
+    path('stuart', views.stuart),
+
+    path('get_data', views.get_data, name='get_data'),
+
+
 ]

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель управления РЖД</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e31e24' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .container-fluid {
+            max-width: 1400px;
+            padding: 2rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: white;
+            margin-bottom: 1rem;
+        }
+
+        .card-header {
+            background: #e31e24;
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem;
+        }
+
+        .list-group-item {
+            border: none;
+            border-bottom: 1px solid #eee;
+            padding: 1rem;
+        }
+
+        .btn-primary {
+            background: #e31e24;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+        }
+
+        .btn-primary:hover {
+            background: #b31b1f;
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+
+        .header-logo {
+            color: #e31e24;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .alert-card {
+            border-left: 8px solid #e31e24;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .alert-close {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.1);
+            font-size: 1.2rem;
+        }
+
+        .alert-icon {
+            font-size: 2.5rem;
+            margin-right: 1rem;
+        }
+
+        .alert-text {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        #alerts .list-group-item {
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="header-logo">
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="#e31e24">
+            <path d="M4 15.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V5c0-3.5-3.58-4-8-4s-8 .5-8 4v10.5zm3.5 1.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+        </svg>
+        Панель управления роботом РЖД
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="m-0">Системные уведомления</h3>
+                </div>
+                <ul id="alerts" class="list-group list-group-flush">
+                    <!-- Алерты будут здесь -->
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="m-0">Активные заказы</h3>
+                </div>
+                <ul id="orders" class="list-group list-group-flush">
+                    <!-- Заказы будут здесь -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeAlerts = new Set();
+
+    function playAlertSound(type) {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance();
+        utterance.lang = 'ru-RU';
+        
+        if(type === 'deviant') {
+            utterance.text = 'Внимание! Обнаружено девиантное поведение';
+        } else if(type === 'stopped') {
+            utterance.text = 'Внимание! Роботу прегражден путь';
+        }
+        
+        synth.speak(utterance);
+    }
+
+    function fetchData() {
+        $.ajax({
+            url: '{% url "get_data" %}',
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                var orders = data.orders;
+                var ordersList = $('#orders');
+                ordersList.empty();
+                orders.forEach(function (order) {
+                    if (!order.status) {
+                        ordersList.append(
+                            '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+                            '<div><strong>' + order.name + '</strong></div>' +
+                            '<button class="btn btn-primary take-order" data-order-id="' + order.order_id + '">✓ Заказ размещен</button>' +
+                            '</li>'
+                        );
+                    } else {
+                        ordersList.append(
+                            '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+                            '<div><strong>' + order.name + '</strong></div>' +
+                            '<span class="badge bg-success">Принят роботом</span>' +
+                            '</li>'
+                        );
+                    }
+                });
+
+                var alertsList = $('#alerts');
+                
+                if (data.is_alert && !activeAlerts.has('deviant')) {
+                    alertsList.append(
+                        '<li id="deviant-alert" class="list-group-item alert-card bg-danger bg-opacity-10 text-danger">' +
+                        '<div class="d-flex align-items-center">' +
+                        '<span class="alert-icon">⚠️</span>' +
+                        '<span class="alert-text">ВНИМАНИЕ! Девиантное поведение</span>' +
+                        '</div>' +
+                        '<span class="alert-close" onclick="closeAlert(\'deviant\')">✕</span>' +
+                        '</li>'
+                    );
+                    activeAlerts.add('deviant');
+                    playAlertSound('deviant');
+                }
+                
+                if (data.is_stopped && !activeAlerts.has('stopped')) {
+                    alertsList.append(
+                        '<li id="stopped-alert" class="list-group-item alert-card bg-warning bg-opacity-10 text-warning">' +
+                        '<div class="d-flex align-items-center">' +
+                        '<span class="alert-icon">⏸️</span>' +
+                        '<span class="alert-text">Роботу прегражден путь</span>' +
+                        '</div>' +
+                        '<span class="alert-close" onclick="closeAlert(\'stopped\')">✕</span>' +
+                        '</li>'
+                    );
+                    activeAlerts.add('stopped');
+                    playAlertSound('stopped');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Ошибка при получении данных:', error);
+            }
+        });
+    }
+
+    function closeAlert(type) {
+        if(type === 'deviant') {
+            $('#deviant-alert').remove();
+        } else if(type === 'stopped') {
+            $('#stopped-alert').remove();
+        }
+        activeAlerts.delete(type);
+    }
+
+    $(document).ready(function () {
+        fetchData();
+        setInterval(fetchData, 1000);
+
+        $(document).on('click', '.take-order', function () {
+            var orderId = $(this).data('order-id');
+            $.ajax({
+                url: '/multimedia/take_order_in_robot/' + orderId,
+                method: 'POST',
+                success: function () {
+                    fetchData();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Ошибка при отправке заказа:', error);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
