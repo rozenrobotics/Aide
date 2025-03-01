@@ -1,71 +1,95 @@
 # services/biometrics.py
-import face_recognition
 import base64
-from io import BytesIO
-from PIL import Image
+import cv2
 import numpy as np
-from users.models import BiometricProfile, TrainTicket
+from PIL import Image
+from io import BytesIO
+from users.models import TrainTicket, BiometricProfile, User
+import os
+import logging
 
+# Путь к файлу каскада Хаара для обнаружения лиц
+HAAR_CASCADE_PATH = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
 
-def register_face(photo_data, user):
-    # Декодирование изображения из base64
-    image_data = base64.b64decode(photo_data.split(',')[1])
-    image = Image.open(BytesIO(image_data))
+# Инициализация распознавателя лиц LBPH
+recognizer = cv2.face.LBPHFaceRecognizer_create()
 
-    # Преобразование изображения в формат RGB (если необходимо)
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
+# Путь к файлу модели распознавания
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'face_model.yml')
 
-    # Преобразование изображения в формат numpy
-    image_np = np.array(image)
-    # Поиск лиц на изображении
-    face_encodings = face_recognition.face_encodings(image_np)
+def train_recognizer():
+    """Тренирует распознаватель на основе сохраненных лиц."""
+    faces = []
+    labels = []
+    biometric_profiles = BiometricProfile.objects.all()
 
-    if face_encodings:
-        face_encoding = face_encodings[0]  # Используем первое найденное лицо
+    for profile in biometric_profiles:
+        # Путь к изображению лица
+        face_image_path = profile.face_image.path
+        image = cv2.imread(face_image_path, cv2.IMREAD_GRAYSCALE)
+        if image is None:
+            continue
+        
+        face_cascade = cv2.CascadeClassifier(HAAR_CASCADE_PATH)
+        faces_rects = face_cascade.detectMultiScale(image, scaleFactor=1.1, minNeighbors=5)
+        
+        for (x, y, w, h) in faces_rects:
+            face = image[y:y+h, x:x+w]
+            faces.append(face)
+            labels.append(profile.user.id)  # Используем ID пользователя как метку
 
-        try:
-            bio_entry = BiometricProfile.objects.create(
-                user=user,
-                face_data=face_encoding
-            )
-        except BiometricProfile.DoesNotExist:
-            bio_entry = BiometricProfile.objects.get(user=user)
-            # Обновите запись, если найдена
-            bio_entry.face_data = face_encoding  # Обновите с новым значением
-            bio_entry.save()
-
-        return bio_entry.id  # Возвращаем ID записи в биометрической базе
-
-    return None  # Если лицо не было найдено
-
+    if faces and labels:
+        recognizer.train(faces, np.array(labels))
+        recognizer.save(MODEL_PATH)
 
 def recognize_face(photo_data, cruise_id):
-    """Вернет 0 если на фото нет лиц, 1 если лица нет в базе рейса, {first_name, last_name, seat_number} если пассажир найден"""
-    image_data = base64.b64decode(photo_data.split(',')[1])
-    image = Image.open(BytesIO(image_data))
+    """
+    Разпознает лицо на фото и возвращает информацию о пользователе или статус.
+    """
+    try:
+        # Декодируем изображение из base64
+        image_data = base64.b64decode(photo_data.split(',')[1])
+        image = Image.open(BytesIO(image_data)).convert('L')  # Преобразовать в оттенки серого
 
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
+        image_np = np.array(image)
+        
+        face_cascade = cv2.CascadeClassifier(HAAR_CASCADE_PATH)
+        faces_rects = face_cascade.detectMultiScale(image_np, scaleFactor=1.1, minNeighbors=5)
 
-    image_np = np.array(image)
-    face_encodings = face_recognition.face_encodings(image_np)
+        if len(faces_rects) == 0:
+            return 0  # На фото нет лиц
 
-    if face_encodings:
-        face_encoding = face_encodings[0]
-        # Получение всех профилей пользователей с билетом на текущий рейс
-        tickets = TrainTicket.objects.filter(train_id=cruise_id)
-        users_with_tickets = [ticket.user for ticket in tickets]
-        biometric_profiles = BiometricProfile.objects.filter(user__in=users_with_tickets)
+        # Предполагаем, что на фото одно лицо
+        (x, y, w, h) = faces_rects[0]
+        face = image_np[y:y+h, x:x+w]
 
-        for entry in biometric_profiles:
-            known_face_encoding = np.frombuffer(entry.face_data, dtype=np.float64)
-            results = face_recognition.compare_faces([known_face_encoding], face_encoding, tolerance=0.6)
+        # Тренируем распознающий модуль перед распознаванием
+        if not os.path.exists(MODEL_PATH):
+            train_recognizer()
 
-            if results[0]:
-                return {'first_name': entry.user.first_name, 'last_name': entry.user.last_name,
-                        'seat_number': TrainTicket.objects.filter(train_id=cruise_id,
-                                                                  user=entry.user).last().seat_number}
-        return 1
+        recognizer.read(MODEL_PATH)
+        label, confidence = recognizer.predict(face)
 
-    return 0
+        # Определение, насколько уверены в распознавании
+        if confidence < 50:  # Порог можно настроить
+            try:
+                user = User.objects.get(id=label)
+                # Проверяем, имеет ли пользователь билет на текущий рейс
+                ticket = TrainTicket.objects.filter(train_id=cruise_id, user=user).last()
+                if ticket:
+                    return {
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'seat_number': ticket.seat_number
+                    }
+                else:
+                    return 1  # Лицо распознано, но нет билета на рейс
+            except User.DoesNotExist:
+                return 1  # Лицо распознано, но пользователь не найден
+        else:
+            return 1  # Лицо не распознано с достаточной уверенностью
+
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Ошибка при распознавании лица: {e}")
+        return 0

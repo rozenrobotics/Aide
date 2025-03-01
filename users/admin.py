@@ -81,4 +81,4 @@ admin.site.register(TicketOrder)
 
 @admin.register(BiometricProfile)
 class BiometricProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'face_data')
+    list_display = ('user', 'face_image')

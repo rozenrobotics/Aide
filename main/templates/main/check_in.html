@@ -108,62 +108,41 @@
 {% block js %}
     {% if not is_bio %}
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const videoCanvas = document.getElementById('video-canvas');
-                const photoImg = document.getElementById('photo');
+            document.addEventListener('DOMContentLoaded', function () {
+                const video = document.createElement('video');
+                const canvas = document.getElementById('video-canvas');
+                const photoInput = document.getElementById('photo-data');
                 const takePhotoButton = document.getElementById('take-photo');
                 const retakePhotoButton = document.getElementById('retake-photo');
-                const photoResult = document.getElementById('photo-result');
-                const photoResultImg = document.getElementById('photo-result-img');
-                const photoDataInput = document.getElementById('photo-data');
 
-                let stream;
-
-                // Получение видеопотока с камеры
-                navigator.mediaDevices.getUserMedia({video: true})
-                    .then(cameraStream => {
-                        stream = cameraStream;
-                        const context = videoCanvas.getContext('2d');
-                        videoCanvas.width = 640; // Установите желаемую ширину
-                        videoCanvas.height = 480; // Установите желаемую высоту
-                        const video = document.createElement('video');
+                // Запрос доступа к камере
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
                         video.srcObject = stream;
                         video.play();
-
-                        function drawFrame() {
-                            context.drawImage(video, 0, 0, videoCanvas.width, videoCanvas.height);
-                            requestAnimationFrame(drawFrame);
-                        }
-
-                        drawFrame();
                     })
-                    .catch(error => {
-                        console.error("Ошибка при доступе к камере:", error);
+                    .catch(err => {
+                        console.error("Не удалось получить доступ к камере: ", err);
                     });
 
-                // Снятие фотографии
-                takePhotoButton.addEventListener('click', () => {
-                    const context = videoCanvas.getContext('2d');
-                    const imageDataURL = videoCanvas.toDataURL('image/png');
-                    photoImg.src = imageDataURL;
-                    photoResultImg.src = imageDataURL;
-                    photoResult.classList.remove('d-none');
-                    photoImg.classList.remove('d-none');
-                    videoCanvas.classList.add('d-none');
+                takePhotoButton.addEventListener('click', function () {
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const dataURL = canvas.toDataURL('image/jpeg');
+                    photoInput.value = dataURL;
+                    document.getElementById('photo-result-img').src = dataURL;
+                    document.getElementById('photo-result').classList.remove('d-none');
                     takePhotoButton.classList.add('d-none');
                     retakePhotoButton.classList.remove('d-none');
-                    photoDataInput.value = imageDataURL;
-                    document.getElementById('video-container').classList.add('d-none');
                 });
 
-                // Пересъемка фотографии
-                retakePhotoButton.addEventListener('click', () => {
-                    photoResult.classList.add('d-none');
-                    photoImg.classList.add('d-none');
-                    videoCanvas.classList.remove('d-none');
+                retakePhotoButton.addEventListener('click', function () {
+                    document.getElementById('photo-result').classList.add('d-none');
                     takePhotoButton.classList.remove('d-none');
                     retakePhotoButton.classList.add('d-none');
-                    document.getElementById('video-container').classList.remove('d-none');
+                    photoInput.value = '';
                 });
             });
         </script>

@@ -10,6 +10,12 @@ services:
       - "8000:8000"
     environment:
       DJANGO_SETTINGS_MODULE: RobotStuartRzd.settings
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
 
   nginx:
     image: nginx:latest

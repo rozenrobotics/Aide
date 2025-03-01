@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from users.models import TrainTicket, BiometricProfile
-from services.biometrics import register_face, recognize_face
+from services.biometrics import recognize_face, train_recognizer
 from django.urls import reverse
 from yoomoney import Quickpay, Client
 from django.conf import settings
@@ -15,7 +15,13 @@ from users.models import TrainCruise
 from robot.send_to_robot import procces_order
 from users.models import TicketOrder
 from RobotStuartRzd.keys import youmoney_token
+import logging
+from PIL import Image
+from io import BytesIO
+import os
+import base64
 
+logger = logging.getLogger(__name__)
 
 @login_required(login_url='login')
 def index(request):
@@ -28,7 +34,6 @@ def check_in(request):
         train_ticket_id = request.POST.get('train_ticket_id')
         photo_data = request.POST.get('photo_data')
 
-        # Найти билет
         try:
             train_ticket = TrainTicket.objects.get(id=train_ticket_id, user=request.user)
         except TrainTicket.DoesNotExist:
@@ -36,14 +41,32 @@ def check_in(request):
 
         if not BiometricProfile.objects.filter(user=request.user).exists():
             if photo_data:
-                # Регистрация лица в биометрической базе
-                if not register_face(photo_data, request.user):
+                try:
+                    # Декодирование и сохранение изображения лица
+                    image_data = base64.b64decode(photo_data.split(',')[1])
+                    image = Image.open(BytesIO(image_data)).convert('L')  # Оттенки серого
+                    face_image_path = f'biometric_faces/{request.user.username}_face.jpg'
+                    os.makedirs(os.path.join('media', 'biometric_faces'), exist_ok=True)
+                    image.save(os.path.join('media', face_image_path))
+
+                    # Создание BiometricProfile
+                    biometric_profile = BiometricProfile.objects.create(
+                        user=request.user,
+                        face_image=face_image_path
+                    )
+
+                    # Тренировка распознающей модели после добавления нового лица
+                    train_recognizer()
+
+                    return redirect('index')  # Перенаправление на страницу успешной регистрации
+                except Exception as e:
+                    logger.error(f"Ошибка при регистрации лица: {e}")
                     return render(request, 'main/check_in.html',
-                                  context={'error': "Ваше лицо не видно, попробуйте еще раз!"})
+                                  context={'error': "Произошла ошибка при регистрации лица. Попробуйте еще раз!"})
             else:
                 return render(request, 'main/check_in.html', context={'error': "Вы не отсканировали лицо!"})
 
-        return redirect('index')  # перенаправление на страницу успешной регистрации
+        return redirect('index')  # Перенаправление на страницу успешной регистрации
 
     return render(request, 'main/check_in.html',
                   context={'is_bio': BiometricProfile.objects.filter(user=request.user).exists()})
