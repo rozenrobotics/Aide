@@ -20,10 +20,10 @@
 
         .qr-code {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 150px;
-            height: 150px;
+            top: 5px;
+            left: 5px;
+            
+            height: 80px;
             z-index: 9999;
         }
 
@@ -367,7 +367,7 @@
     </style>
 </head>
 <body>
-<img src="{% static 'qr.svg' %}" class="qr-code" alt="QR Code">
+<img src="{% static 'mila-mono.svg' %}" class="qr-code" alt="QR Code">
 <form method="post">
     {% csrf_token %}
 </form>
@@ -404,6 +404,15 @@
     </div>
 
 </div>
+
+<script>
+    document.body.addEventListener('click', () => {
+
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log(`Ошибка включения полноэкранного режима: ${err.message}`);
+        });
+    })
+</script>
 
 <script>
 
@@ -484,7 +493,7 @@
            speakText("Быстро мчится наш экспресс,Робот-стюард - наш прогресс! Никогда не устаёт - Поможет он и развлечёт!");
         }
 
-        if (!isListeningForCommand && transcript.toLowerCase().includes("галя")) {
+        if (!isListeningForCommand && transcript.toLowerCase().includes("мила")) {
             isListeningForCommand = true;
             setStatus('listening');
             userStartedSpeaking = false;
@@ -524,7 +533,7 @@
             } catch (error) {
                 console.error("Ошибка:", error);
                 setStatus('idle');
-                loaderElement.innerText = "Произошла ошибка, скажите 'галя' для повторного начала.";
+                loaderElement.innerText = "Произошла ошибка, скажите 'мила' для повторного начала.";
                 isListeningForCommand = false;
                 recognition.start();
             }
@@ -560,9 +569,7 @@
             startRecognition();
         }
         // Запрос полноэкранного режима при первом клике
-        document.documentElement.requestFullscreen().catch(err => {
-            console.log(`Ошибка включения полноэкранного режима: ${err.message}`);
-        });
+
     }, {once: true});
 
     // Очистка истории чата каждые 2 минуты
@@ -588,7 +595,7 @@
             case 'idle':
                 leftEye.style.animation = 'eye-move 5s infinite';
                 rightEye.style.animation = 'eye-move 5s infinite';
-                statusText.textContent = 'Скажите "галя", чтобы начать';
+                statusText.textContent = 'Скажите "мила", чтобы начать';
                 fetch('{% url 'stop_talking_ajax' %}')
                     .then(response => response.json())
                     .then(data => console.log(data))
